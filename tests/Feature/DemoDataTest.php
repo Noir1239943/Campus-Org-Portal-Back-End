@@ -39,7 +39,7 @@ class DemoDataTest extends TestCase
 
     public function test_officer_pages_load(): void
     {
-        $officer = User::query()->where('id_number', '2023-00089')->firstOrFail();
+        $officer = User::query()->where('id_number', '0002')->firstOrFail();
         $this->actingAs($officer, 'sanctum');
 
         $this->getJson('/api/officer/overview')->assertOk()->assertJsonPath('organization.acronym', 'JITS');
@@ -55,7 +55,7 @@ class DemoDataTest extends TestCase
 
     public function test_adviser_pages_load(): void
     {
-        $adviser = User::query()->where('id_number', 'FAC-0012')->firstOrFail();
+        $adviser = User::query()->where('id_number', 'Admin')->firstOrFail();
         $this->actingAs($adviser, 'sanctum');
 
         $this->getJson('/api/adviser/overview')->assertOk()->assertJsonStructure(['stats', 'activity', 'attendance', 'organizations', 'alerts']);

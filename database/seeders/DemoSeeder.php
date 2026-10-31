@@ -70,7 +70,7 @@ class DemoSeeder extends Seeder
     private function createUsers(): void
     {
         $this->adviser = $this->user([
-            'id_number' => 'FAC-0012',
+            'id_number' => 'Admin',
             'first_name' => 'Maricel',
             'last_name' => 'Gabutero',
             'email' => 'osa@cpc.edu.ph',
@@ -99,7 +99,7 @@ class DemoSeeder extends Seeder
         ]);
 
         $this->johnRey = $this->user([
-            'id_number' => '2023-00089',
+            'id_number' => '0002',
             'first_name' => 'John Rey',
             'last_name' => 'Ybañez',
             'email' => 'johnrey.ybanez@cpc.edu.ph',

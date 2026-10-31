@@ -55,8 +55,8 @@ Run the tests: `php artisan test`
 | Role | Log in with |
 |---|---|
 | Student | `2024-00145` or `kyla.abellana@cpc.edu.ph` |
-| Officer (JITS President) | `2023-00089` |
-| Adviser / OSA | `osa@cpc.edu.ph` or `FAC-0012` |
+| Officer (JITS President) | `0002` |
+| Adviser / OSA | `Admin` or `osa@cpc.edu.ph` |
 
 Sample dates are relative to today. To refresh them later: `php artisan campus:reset-demo` (deletes all data).
 

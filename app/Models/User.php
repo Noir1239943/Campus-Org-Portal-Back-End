@@ -178,7 +178,7 @@ class User extends Authenticatable
         $login = trim($login);
 
         return $query->where(function (Builder $q) use ($login) {
-            $q->where('id_number', strtoupper($login))
+            $q->whereRaw('UPPER(id_number) = ?', [strtoupper($login)])
                 ->orWhereRaw('LOWER(email) = ?', [strtolower($login)]);
         });
     }

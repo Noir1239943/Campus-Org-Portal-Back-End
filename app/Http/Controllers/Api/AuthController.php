@@ -51,7 +51,12 @@ class AuthController extends Controller
         ]);
 
         $data = $request->validate([
-            'id_number' => ['required', 'string', 'max:30', 'regex:/^[A-Z0-9\-]+$/', 'unique:users,id_number'],
+            'id_number' => ['required', 'string', 'max:30', 'regex:/^[A-Z0-9\-]+$/', function (string $attribute, mixed $value, \Closure $fail) {
+                // Logins ignore case, so "admin" and "Admin" are the same ID.
+                if (User::query()->whereRaw('UPPER(id_number) = ?', [strtoupper((string) $value)])->exists()) {
+                    $fail('This ID number is already registered.');
+                }
+            }],
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],

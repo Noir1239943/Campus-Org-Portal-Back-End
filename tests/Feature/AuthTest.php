@@ -28,6 +28,39 @@ class AuthTest extends TestCase
             ->assertOk();
     }
 
+    public function test_id_number_login_ignores_case_and_short_ids_work(): void
+    {
+        User::factory()->adviser()->create(['id_number' => 'Admin', 'email' => 'osa@cpc.edu.ph']);
+        User::factory()->create(['id_number' => '0002']);
+
+        foreach (['admin', 'ADMIN', 'Admin', 'osa@cpc.edu.ph'] as $login) {
+            $this->postJson('/api/auth/login', ['login' => $login, 'password' => 'password123'])
+                ->assertOk()
+                ->assertJsonPath('workspaces', ['adviser']);
+        }
+
+        $this->postJson('/api/auth/login', ['login' => '0002', 'password' => 'password123'])
+            ->assertOk()
+            ->assertJsonPath('workspaces', ['student']);
+    }
+
+    public function test_cannot_register_an_id_that_differs_only_by_case(): void
+    {
+        User::factory()->adviser()->create(['id_number' => 'Admin']);
+
+        $this->postJson('/api/auth/register', [
+            'id_number' => 'admin',
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'email' => 'test.user@example.com',
+            'program' => 'BSIT',
+            'year_level' => 1,
+            'section' => 'A',
+            'password' => 'cpc12345',
+            'password_confirmation' => 'cpc12345',
+        ])->assertStatus(422)->assertJsonValidationErrors('id_number');
+    }
+
     public function test_wrong_password_is_rejected(): void
     {
         User::factory()->create(['id_number' => '2024-00145']);
