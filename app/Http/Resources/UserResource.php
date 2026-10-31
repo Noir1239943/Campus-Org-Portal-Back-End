@@ -20,6 +20,8 @@ class UserResource extends JsonResource
             'initials' => $this->initials,
             'email' => $this->email,
             'role' => $this->role,
+            'is_active' => $this->is_active,
+            'must_change_password' => $this->must_change_password,
             'program' => $this->program,
             'year_level' => $this->year_level,
             'section' => $this->section,

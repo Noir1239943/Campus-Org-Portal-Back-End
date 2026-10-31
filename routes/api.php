@@ -28,7 +28,7 @@ Route::prefix('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::prefix('auth')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
@@ -147,6 +147,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('events/{event}/reject', [Adviser\EventController::class, 'reject']);
 
         Route::get('attendance', Adviser\AttendanceController::class);
+
+        Route::prefix('accounts')->group(function () {
+            Route::get('/', [Adviser\AccountController::class, 'index']);
+            Route::post('/', [Adviser\AccountController::class, 'store']);
+            Route::post('import', [Adviser\AccountController::class, 'import']);
+            Route::put('{user}', [Adviser\AccountController::class, 'update']);
+            Route::post('{user}/reset-password', [Adviser\AccountController::class, 'resetPassword']);
+            Route::post('{user}/disable', [Adviser\AccountController::class, 'disable']);
+            Route::post('{user}/enable', [Adviser\AccountController::class, 'enable']);
+        });
 
         Route::get('students', [Adviser\StudentController::class, 'index']);
         Route::get('students/{user}', [Adviser\StudentController::class, 'show']);

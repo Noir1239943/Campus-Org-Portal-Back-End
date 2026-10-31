@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureActiveAccount;
 use App\Http\Middleware\EnsureAdviser;
 use App\Http\Middleware\EnsureOfficer;
 use App\Http\Middleware\EnsureStudent;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'student' => EnsureStudent::class,
             'officer' => EnsureOfficer::class,
             'adviser' => EnsureAdviser::class,
+            'active' => EnsureActiveAccount::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

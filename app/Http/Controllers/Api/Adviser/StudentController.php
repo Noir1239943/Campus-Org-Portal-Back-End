@@ -59,7 +59,7 @@ class StudentController extends Controller
 
         $temporary = 'CPC-'.Str::upper(Str::random(4)).'-'.random_int(1000, 9999);
 
-        $user->update(['password' => $temporary]);
+        $user->update(['password' => $temporary, 'must_change_password' => true]);
         $user->tokens()->delete();
 
         $notifications->send(

@@ -29,6 +29,12 @@ class AuthController extends Controller
             ]);
         }
 
+        if (! $user->is_active) {
+            throw ValidationException::withMessages([
+                'login' => 'This account is disabled. Please visit the Office of Student Affairs.',
+            ]);
+        }
+
         $user->forceFill(['last_login_at' => now()])->save();
 
         $device = Str::limit((string) $request->userAgent(), 80, '') ?: 'web';
@@ -102,7 +108,10 @@ class AuthController extends Controller
     public function changePassword(ChangePasswordRequest $request): JsonResponse
     {
         $user = $request->user();
-        $user->update(['password' => (string) $request->input('password')]);
+        $user->update([
+            'password' => (string) $request->input('password'),
+            'must_change_password' => false,
+        ]);
 
         // Sign out every other device.
         $currentId = $user->currentAccessToken()?->id;

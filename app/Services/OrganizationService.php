@@ -106,6 +106,19 @@ class OrganizationService
         });
     }
 
+    /** Every student is automatically a member of organizations like the student government. */
+    public function enrollInAllStudentOrganizations(User $student): void
+    {
+        $organizationIds = Organization::query()->where('requires_all_students', true)->pluck('id');
+
+        foreach ($organizationIds as $organizationId) {
+            Membership::query()->firstOrCreate(
+                ['user_id' => $student->id, 'organization_id' => $organizationId],
+                ['position' => 'Member', 'is_officer' => false, 'status' => Membership::STATUS_ACTIVE, 'joined_at' => now()]
+            );
+        }
+    }
+
     public function uniqueSlug(string $name, ?int $ignoreId = null): string
     {
         $base = Str::slug($name) ?: 'organization';

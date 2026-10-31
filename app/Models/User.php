@@ -27,12 +27,19 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_active',
+        'must_change_password',
         'program',
         'year_level',
         'section',
         'phone',
         'title',
         'last_login_at',
+    ];
+
+    protected $attributes = [
+        'is_active' => true,
+        'must_change_password' => false,
     ];
 
     protected $hidden = [
@@ -45,6 +52,8 @@ class User extends Authenticatable
         return [
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
             'year_level' => 'integer',
         ];
     }
