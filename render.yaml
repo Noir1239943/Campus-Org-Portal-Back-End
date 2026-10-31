@@ -1,0 +1,42 @@
+# Render Blueprint — creates the API web service from this repo.
+# Render dashboard → New → Blueprint → pick this repository.
+services:
+  - type: web
+    name: cpc-orgs-api
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /up
+    envVars:
+      - key: APP_NAME
+        value: CPC Campus Organizations
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false # paste the value from: php artisan key:generate --show
+      - key: APP_URL
+        sync: false # e.g. https://cpc-orgs-api.onrender.com
+      - key: APP_TIMEZONE
+        value: Asia/Manila
+      - key: FRONTEND_URL
+        sync: false # e.g. https://cpc-orgs.vercel.app
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        sync: false # Neon connection string
+      - key: DB_SSLMODE
+        value: require
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+      - key: SESSION_DRIVER
+        value: array
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: SEED_DEMO_DATA
+        value: "true"
