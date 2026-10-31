@@ -44,6 +44,9 @@ class Announcement extends Model
         return $query
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
+            // Archived organizations no longer post to students.
+            ->where(fn (Builder $q) => $q->whereNull('organization_id')
+                ->orWhereHas('organization', fn ($o) => $o->where('status', '!=', Organization::STATUS_INACTIVE)))
             ->where(function (Builder $q) use ($orgIds) {
                 $q->whereNull('organization_id')
                     ->orWhere('audience', 'all')

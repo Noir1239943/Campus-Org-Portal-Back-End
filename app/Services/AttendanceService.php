@@ -233,7 +233,7 @@ class AttendanceService
      */
     public function relevantEndedEvents(User $user): Collection
     {
-        $memberships = $user->activeMemberships()->get(['organization_id', 'joined_at']);
+        $memberships = $user->liveMemberships()->get(['organization_id', 'joined_at']);
         $registeredIds = EventRegistration::query()->where('user_id', $user->id)->pluck('event_id');
         $attendedIds = Attendance::query()->where('user_id', $user->id)->pluck('event_id');
         $ids = $registeredIds->merge($attendedIds)->unique()->values()->all();
@@ -291,7 +291,7 @@ class AttendanceService
      */
     public function clearance(User $user): array
     {
-        $memberships = $user->activeMemberships()->with('organization')->get();
+        $memberships = $user->liveMemberships()->with('organization')->get();
         $rows = Attendance::query()->where('user_id', $user->id)->get()->keyBy('event_id');
         $excuses = ExcuseRequest::query()->where('user_id', $user->id)->get()->keyBy('event_id');
         $windowDays = config('campus.excuse_window_days');

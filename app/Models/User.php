@@ -100,9 +100,16 @@ class User extends Authenticatable
         return $this->memberships()->where('status', Membership::STATUS_ACTIVE);
     }
 
+    /** Active memberships in organizations that are not archived (inactive). */
+    public function liveMemberships(): HasMany
+    {
+        return $this->activeMemberships()
+            ->whereHas('organization', fn ($q) => $q->where('status', '!=', Organization::STATUS_INACTIVE));
+    }
+
     public function officerMemberships(): HasMany
     {
-        return $this->activeMemberships()->where('is_officer', true);
+        return $this->liveMemberships()->where('is_officer', true);
     }
 
     public function applications(): HasMany
@@ -162,7 +169,7 @@ class User extends Authenticatable
     /** @return array<int> */
     public function activeOrganizationIds(): array
     {
-        return $this->activeMemberships()->pluck('organization_id')->all();
+        return $this->liveMemberships()->pluck('organization_id')->all();
     }
 
     /** Log in with either the school ID number or the email address. */

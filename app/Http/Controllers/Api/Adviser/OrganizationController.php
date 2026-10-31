@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveOrganizationRequest;
 use App\Http\Resources\EventResource;
 use App\Http\Resources\OrganizationResource;
+use App\Models\Attendance;
+use App\Models\Event;
 use App\Models\Membership;
 use App\Models\Organization;
 use App\Models\User;
@@ -15,6 +17,7 @@ use App\Services\OrganizationHealthService;
 use App\Services\OrganizationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -53,9 +56,13 @@ class OrganizationController extends Controller
 
         $upcoming = $organization->events()->whereIn('status', ['published', 'pending'])->upcoming()->withCount('registrations')->limit(5)->get();
 
+        $history = $this->history($organization);
+
         return response()->json([
             'organization' => new OrganizationResource($organization->loadCount('activeMemberships as members_count')),
             'health' => $row,
+            'can_delete' => $history['events'] === 0 && $history['attendance'] === 0,
+            'history' => $history,
             'officers' => $this->officers($organization),
             'recent_events' => EventResource::collection($events),
             'upcoming_events' => EventResource::collection($upcoming),
@@ -154,6 +161,53 @@ class OrganizationController extends Controller
         );
 
         return response()->json(['message' => "Status updated to {$label}."]);
+    }
+
+    /**
+     * Permanently delete an organization that was never used. Anything with
+     * event or attendance history must be archived instead so records are kept.
+     */
+    public function destroy(Request $request, Organization $organization, NotificationService $notifications): JsonResponse
+    {
+        $request->validate(['confirm' => ['required', 'string']]);
+
+        if (strcasecmp(trim((string) $request->input('confirm')), $organization->acronym) !== 0) {
+            throw ValidationException::withMessages(['confirm' => "Type {$organization->acronym} to confirm."]);
+        }
+
+        $history = $this->history($organization);
+
+        if ($history['events'] > 0 || $history['attendance'] > 0) {
+            return response()->json([
+                'message' => 'This organization has event and attendance history. Archive it instead so student records are kept.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($organization, $notifications) {
+            $notifications->toMembers(
+                $organization,
+                'organization_removed',
+                "{$organization->name} was removed by the Office of Student Affairs"
+            );
+
+            $organization->delete();
+        });
+
+        return response()->json(['message' => "{$organization->name} was deleted."]);
+    }
+
+    /** Published/cancelled events and attendance records that block a permanent delete. */
+    private function history(Organization $organization): array
+    {
+        $events = $organization->events()
+            ->whereIn('status', [Event::STATUS_PUBLISHED, Event::STATUS_CANCELLED])
+            ->count();
+
+        $attendance = Attendance::query()
+            ->whereIn('event_id', $organization->events()->select('id'))
+            ->count();
+
+        return ['events' => $events, 'attendance' => $attendance];
     }
 
     /** Officers with the President first. */

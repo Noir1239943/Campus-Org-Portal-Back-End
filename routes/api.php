@@ -133,6 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('organizations', [Adviser\OrganizationController::class, 'store']);
         Route::get('organizations/{organization}', [Adviser\OrganizationController::class, 'show']);
         Route::put('organizations/{organization}', [Adviser\OrganizationController::class, 'update']);
+        Route::delete('organizations/{organization}', [Adviser\OrganizationController::class, 'destroy']);
         Route::patch('organizations/{organization}/status', [Adviser\OrganizationController::class, 'updateStatus']);
         Route::post('organizations/{organization}/officers', [Adviser\OrganizationController::class, 'addOfficer']);
         Route::patch('organizations/{organization}/officers/{membership}', [Adviser\OrganizationController::class, 'updateOfficer']);

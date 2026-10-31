@@ -39,7 +39,7 @@ class DashboardController extends Controller
         // Check-in is open right now for an event I can attend.
         $checkInNow = $upcoming->filter(fn (Event $e) => $e->viewer_state['can_check_in'])->values();
 
-        $memberships = $user->activeMemberships()
+        $memberships = $user->liveMemberships()
             ->with(['organization' => fn ($q) => $q->withCount('activeMemberships as members_count')])
             ->get()
             ->map(fn ($m) => [
