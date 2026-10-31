@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\NotificationService;
+use App\Services\OrganizationService;
 use App\Support\Csv;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -88,7 +89,30 @@ class MemberController extends Controller
             throw ValidationException::withMessages(['is_officer' => 'You cannot remove your own officer access. Ask another officer or the OSA.']);
         }
 
+        $targetIsPresident = $this->isPresident($membership);
+        $keepsPresident = OrganizationService::isPresidentPosition($data['position']) && $data['is_officer'];
+
+        if ($targetIsPresident && ! $keepsPresident) {
+            throw ValidationException::withMessages(['position' => 'Only the Office of Student Affairs can change the President.']);
+        }
+
+        if (! $targetIsPresident && OrganizationService::isPresidentPosition($data['position'])) {
+            throw ValidationException::withMessages(['position' => 'Only the Office of Student Affairs can assign the President.']);
+        }
+
+        $becomesOfficer = $data['is_officer'] && ! $membership->is_officer;
+
         $membership->update($data);
+
+        if ($becomesOfficer) {
+            $this->notifications->send(
+                $membership->user_id,
+                'officer_assigned',
+                "You are now {$data['position']} of {$organization->acronym}",
+                "An officer gave you officer access to {$organization->name}.",
+                '/officer'
+            );
+        }
 
         return response()->json(['message' => 'Member updated.']);
     }
@@ -100,6 +124,10 @@ class MemberController extends Controller
 
         if ($membership->user_id === $request->user()->id) {
             throw ValidationException::withMessages(['membership' => 'You cannot remove yourself from the organization here.']);
+        }
+
+        if ($this->isPresident($membership)) {
+            throw ValidationException::withMessages(['membership' => 'Only the Office of Student Affairs can remove the President.']);
         }
 
         $membership->update(['status' => Membership::STATUS_INACTIVE, 'is_officer' => false]);
@@ -170,6 +198,7 @@ class MemberController extends Controller
                 ],
                 'position' => $m->position,
                 'is_officer' => $m->is_officer,
+                'is_president' => $this->isPresident($m),
                 'joined_at' => $m->joined_at?->toIso8601String(),
                 'events_expected' => $rates[$m->user_id]['expected'],
                 'events_attended' => $rates[$m->user_id]['attended'],
@@ -192,6 +221,11 @@ class MemberController extends Controller
                 'at_risk' => collect($rates)->filter(fn ($r) => $r['rate'] !== null && $r['rate'] < $threshold)->count(),
             ],
         ];
+    }
+
+    private function isPresident(Membership $membership): bool
+    {
+        return $membership->is_officer && OrganizationService::isPresidentPosition($membership->position);
     }
 
     private function organization(Request $request): Organization

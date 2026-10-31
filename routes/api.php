@@ -18,6 +18,7 @@ Route::get('meta', [AuthController::class, 'meta']);
 
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:10,1');
     Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 });
 
@@ -57,6 +58,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('applications', [Student\ApplicationController::class, 'index']);
         Route::get('applications/{application}', [Student\ApplicationController::class, 'show']);
         Route::post('applications/{application}/withdraw', [Student\ApplicationController::class, 'withdraw']);
+
+        Route::get('proposals', [Student\ProposalController::class, 'index']);
+        Route::post('proposals', [Student\ProposalController::class, 'store']);
+        Route::post('proposals/{proposal}/withdraw', [Student\ProposalController::class, 'withdraw']);
 
         Route::get('events', [Student\EventController::class, 'index']);
         Route::get('events/{event}', [Student\EventController::class, 'show']);
@@ -125,8 +130,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('overview', Adviser\OverviewController::class);
 
         Route::get('organizations', [Adviser\OrganizationController::class, 'index']);
+        Route::post('organizations', [Adviser\OrganizationController::class, 'store']);
         Route::get('organizations/{organization}', [Adviser\OrganizationController::class, 'show']);
+        Route::put('organizations/{organization}', [Adviser\OrganizationController::class, 'update']);
         Route::patch('organizations/{organization}/status', [Adviser\OrganizationController::class, 'updateStatus']);
+        Route::post('organizations/{organization}/officers', [Adviser\OrganizationController::class, 'addOfficer']);
+        Route::patch('organizations/{organization}/officers/{membership}', [Adviser\OrganizationController::class, 'updateOfficer']);
+
+        Route::get('proposals', [Adviser\ProposalController::class, 'index']);
+        Route::post('proposals/{proposal}/approve', [Adviser\ProposalController::class, 'approve']);
+        Route::post('proposals/{proposal}/reject', [Adviser\ProposalController::class, 'reject']);
 
         Route::get('events', [Adviser\EventController::class, 'index']);
         Route::post('events/{event}/approve', [Adviser\EventController::class, 'approve']);

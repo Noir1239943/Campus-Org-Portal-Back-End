@@ -10,6 +10,7 @@ use App\Models\ExcuseRequest;
 use App\Models\Membership;
 use App\Models\MembershipApplication;
 use App\Models\Organization;
+use App\Models\OrganizationProposal;
 use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Database\Seeder;
@@ -56,6 +57,7 @@ class DemoSeeder extends Seeder
         $this->createEvents();
         $this->createRegistrationsAndAttendance();
         $this->createApplications();
+        $this->createProposals();
         $this->createExcuses();
         $this->createAnnouncements();
         $this->createNotifications();
@@ -675,6 +677,29 @@ class DemoSeeder extends Seeder
         ]);
 
         $application->forceFill(['created_at' => $when, 'updated_at' => $when])->save();
+    }
+
+    /* ================================================================= */
+    /* New organization proposals                                         */
+    /* ================================================================= */
+
+    private function createProposals(): void
+    {
+        $proposer = $this->students->first(fn (User $u) => $u->program === 'BSIT' && $u->year_level === 2 && $u->id !== $this->kyla->id);
+
+        $proposal = OrganizationProposal::query()->create([
+            'user_id' => $proposer->id,
+            'name' => 'CPC Esports & Game Dev Club',
+            'acronym' => 'EGDC',
+            'category' => 'Arts & Culture',
+            'description' => 'A community for CPC students who play competitive games and want to learn how games are designed and built.',
+            'purpose' => 'Many CPC students already play and organize informal tournaments, but there is no recognized group to represent the school or to teach game development. The club would give gamers a safe, structured space and introduce students to game design and programming.',
+            'planned_activities' => "Inter-program esports tournament during Intramurals\nMonthly game jam for beginners\nIntro to Unity and Godot workshops\nWatch parties and sportsmanship seminars",
+            'adviser_name' => 'Mr. Renato Villanueva',
+            'expected_members' => 35,
+        ]);
+
+        $proposal->forceFill(['created_at' => now()->subDays(2), 'updated_at' => now()->subDays(2)])->save();
     }
 
     /* ================================================================= */

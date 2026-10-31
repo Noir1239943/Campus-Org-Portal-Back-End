@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\Membership;
 use App\Models\MembershipApplication;
 use App\Models\Organization;
+use App\Models\OrganizationProposal;
 use App\Services\AttendanceService;
 use App\Services\OrganizationHealthService;
 use Illuminate\Http\JsonResponse;
@@ -77,7 +78,17 @@ class OverviewController extends Controller
             ]);
         }
 
-        $staleApplications = MembershipApplication::query()
+        $pendingProposals = OrganizationProposal::query()->where('status', OrganizationProposal::STATUS_PENDING)->count();
+        if ($pendingProposals) {
+            $alerts->prepend([
+                'level' => 'info',
+                'title' => 'New organization proposals',
+                'message' => "{$pendingProposals} ".str('proposal')->plural($pendingProposals).' to start a new organization.',
+                'link' => '/adviser/proposals',
+            ]);
+        }
+
+        $staleApplications =MembershipApplication::query()
             ->where('status', MembershipApplication::STATUS_PENDING)
             ->where('created_at', '<', now()->subDays(7))
             ->count();
@@ -101,6 +112,7 @@ class OverviewController extends Controller
                 'events_next_30_days' => $published->filter(fn ($e) => $e->starts_at->between(now(), now()->addDays(30)))->count(),
                 'attendance_risks' => $report->where('health', 'at_risk')->count(),
                 'pending_event_approvals' => $pendingEvents,
+                'pending_proposals' => $pendingProposals,
                 'probation' => Organization::query()->where('status', Organization::STATUS_PROBATION)->count(),
             ],
             'activity' => $activity,

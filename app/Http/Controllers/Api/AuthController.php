@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -39,6 +40,35 @@ class AuthController extends Controller
             'token' => $token,
             ...$this->profile($user),
         ]);
+    }
+
+    /** Self-service sign-up for students. Advisers/OSA accounts are created by the OSA. */
+    public function register(Request $request): JsonResponse
+    {
+        $request->merge([
+            'id_number' => strtoupper(trim((string) $request->input('id_number'))),
+            'email' => strtolower(trim((string) $request->input('email'))),
+        ]);
+
+        $data = $request->validate([
+            'id_number' => ['required', 'string', 'max:30', 'regex:/^[A-Z0-9\-]+$/', 'unique:users,id_number'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'program' => ['required', 'string', 'max:20'],
+            'year_level' => ['required', 'integer', 'between:1,6'],
+            'section' => ['required', 'string', 'max:10'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+        ]);
+
+        User::create([
+            ...$data,
+            'role' => User::ROLE_STUDENT,
+            'program' => strtoupper($data['program']),
+            'section' => strtoupper($data['section']),
+        ]);
+
+        return response()->json(['message' => 'Account created. You can now sign in.'], 201);
     }
 
     public function me(Request $request): JsonResponse
